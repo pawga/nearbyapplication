@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">My  Nearby Application</string>
+
+    <string name="error_missing_permissions">Cannot start without required permissions</string>
+    <string name="cancel">Cancel</string>
+    <string name="send">Send</string>
+</resources>
