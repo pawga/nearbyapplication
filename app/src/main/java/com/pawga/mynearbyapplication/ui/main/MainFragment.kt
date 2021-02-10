@@ -7,15 +7,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.annotation.CallSuper
 import androidx.core.content.ContextCompat
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
 import com.pawga.mynearbyapplication.R
+import com.pawga.mynearbyapplication.databinding.MainFragmentBinding
+import com.pawga.mynearbyapplication.domain.State
+import com.pawga.mynearbyapplication.extensions.exhaustive
+import timber.log.Timber
 
-class MainFragment : Fragment() {
+class MainFragment : Fragment(), MainView {
 
     private val REQUIRED_PERMISSIONS = arrayOf(
         Manifest.permission.BLUETOOTH,
@@ -28,30 +32,26 @@ class MainFragment : Fragment() {
     private val REQUEST_CODE_REQUIRED_PERMISSIONS = 1001
 
     private lateinit var viewModel: MainViewModel
+    private lateinit var binding: MainFragmentBinding
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.main_fragment, container, false)
-    }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        // TODO: Use the ViewModel
-    }
+        viewModel = ViewModelProvider(
+                this,
+                MainViewModel.Factory()).get(MainViewModel::class.java)
 
-    override fun onStart() {
-        super.onStart()
+        viewModel.stateLiveData.observe(viewLifecycleOwner, Observer {
+            render(it)
+        })
 
-        context?.also {
-            if (!hasPermissions(it, *REQUIRED_PERMISSIONS)) {
-                requestPermissions(
-                    REQUIRED_PERMISSIONS,
-                    REQUEST_CODE_REQUIRED_PERMISSIONS
-                )
-            }
-        }
+        binding = DataBindingUtil.inflate(inflater, R.layout.main_fragment, container, false)
+        binding.lifecycleOwner = this
+        binding.viewModel = viewModel
+
+        return binding.root
     }
 
     override fun onRequestPermissionsResult(
@@ -63,14 +63,37 @@ class MainFragment : Fragment() {
         }
         for (grantResult in grantResults) {
             if (grantResult == PackageManager.PERMISSION_DENIED) {
-
-                Snackbar.make(
-                    requireView(),
-                    getString(R.string.error_missing_permissions),
-                    Snackbar.LENGTH_LONG)
-                    .setAction(getString(R.string.cancel), null).show()
-
+                viewModel.setStatus(State.NonPermissions)
                 return
+            }
+        }
+    }
+
+    override fun render(state: State) {
+        when (state) {
+            is State.RequiredPermissions -> renderPermissionsState()
+            is State.Loading -> Timber.d("State.LoadingState")
+            is State.NonPermissions -> {
+                Snackbar.make(
+                        requireView(),
+                        getString(R.string.error_missing_permissions),
+                        Snackbar.LENGTH_LONG)
+                        .setAction(getString(R.string.cancel), null).show()
+            }
+            is State.Error -> Timber.d("State.ErrorState")
+            is State.Ready -> Timber.d("State.Ready")
+        }.exhaustive
+    }
+
+    private fun renderPermissionsState() {
+        context?.also {
+            if (!hasPermissions(it, *REQUIRED_PERMISSIONS)) {
+                requestPermissions(
+                        REQUIRED_PERMISSIONS,
+                        REQUEST_CODE_REQUIRED_PERMISSIONS
+                )
+            } else {
+                viewModel.setStatus(State.Ready)
             }
         }
     }
