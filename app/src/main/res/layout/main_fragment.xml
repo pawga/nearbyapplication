@@ -5,6 +5,7 @@
     xmlns:tool="http://schemas.android.com/tools">
 
     <data>
+        <import type="android.view.View"/>
         <variable
             name="viewModel"
             type="com.pawga.mynearbyapplication.ui.main.MainViewModel"/>
@@ -38,6 +39,32 @@
             app:layout_constraintStart_toStartOf="@+id/name"
             app:layout_constraintTop_toBottomOf="@+id/name" />
 
+        <Button
+            android:id="@+id/find_opponents"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/action_find_opponents"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/opponent_name"
+            app:nearbyEnable="@{viewModel.stateLiveData}" />
+
+        <Button
+            android:id="@+id/disconnect"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/action_disconnect"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/find_opponents"
+            app:nearbyEnable="@{viewModel.stateLiveData}" />
+
         <EditText
             android:id="@+id/message"
             android:layout_width="0dp"
@@ -46,20 +73,24 @@
             android:layout_marginTop="32dp"
             android:layout_marginEnd="8dp"
             android:autofillHints=""
+            app:nearbyEnable="@{viewModel.stateLiveData}"
             android:inputType="textShortMessage"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/opponent_name" />
+            app:layout_constraintTop_toBottomOf="@+id/disconnect" />
 
         <Button
             android:id="@+id/send"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:text="@string/send"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/message" />
+            app:layout_constraintTop_toBottomOf="@+id/message"
+            app:nearbyEnable="@{viewModel.stateLiveData}" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/owner_messages"

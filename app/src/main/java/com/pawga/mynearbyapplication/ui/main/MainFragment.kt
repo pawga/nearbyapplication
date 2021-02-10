@@ -72,6 +72,7 @@ class MainFragment : Fragment(), MainView {
         when (state) {
             is State.RequiredPermissions -> renderPermissionsState()
             is State.Loading -> Timber.d("State.LoadingState")
+            is State.RequiredOpponent -> Timber.d("State.RequiredOpponent")
             is State.NonPermissions -> {
                 Snackbar.make(
                         requireView(),
@@ -92,7 +93,7 @@ class MainFragment : Fragment(), MainView {
                         REQUEST_CODE_REQUIRED_PERMISSIONS
                 )
             } else {
-                viewModel.setStatus(State.Ready)
+                viewModel.setStatus(State.RequiredOpponent)
             }
         }
     }

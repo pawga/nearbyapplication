@@ -4,4 +4,7 @@
     <string name="error_missing_permissions">Cannot work without required permissions</string>
     <string name="cancel">Cancel</string>
     <string name="send">Send</string>
+
+    <string name="action_find_opponents">Find opponent</string>
+    <string name="action_disconnect">Disconnect</string>
 </resources>

@@ -9,5 +9,6 @@ sealed class State {
     object Loading : State()
     data class Error(val data: String) : State()
     object RequiredPermissions : State()
+    object RequiredOpponent : State()
     object NonPermissions : State()
 }
