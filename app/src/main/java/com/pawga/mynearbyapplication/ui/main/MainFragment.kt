@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.material.snackbar.Snackbar
@@ -65,6 +66,13 @@ class MainFragment : Fragment(), MainView {
         binding = DataBindingUtil.inflate(inflater, R.layout.main_fragment, container, false)
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
+
+        binding.opponentMessages.adapter = ListAdapter(viewModel.receivedMessages)
+        binding.opponentMessages.layoutManager =
+            LinearLayoutManager(binding.root.context, LinearLayoutManager.VERTICAL, false)
+        binding.ownerMessages.adapter = ListAdapter(viewModel.sentMessages)
+        binding.ownerMessages.layoutManager =
+            LinearLayoutManager(binding.root.context, LinearLayoutManager.VERTICAL, false)
 
         return binding.root
     }
@@ -143,7 +151,7 @@ class MainFragment : Fragment(), MainView {
         return true
     }
 
-    fun hideKeyboardFrom(context: Context, view: View) {
+    private fun hideKeyboardFrom(context: Context, view: View) {
         val imm: InputMethodManager =
             context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)

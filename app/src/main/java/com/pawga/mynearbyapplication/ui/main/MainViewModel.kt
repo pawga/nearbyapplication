@@ -1,34 +1,50 @@
 package com.pawga.mynearbyapplication.ui.main
 
+import android.os.Build
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.nearby.connection.*
 import com.pawga.mynearbyapplication.domain.State
-import com.pawga.mynearbyapplication.utils.CodenameGenerator.generate
 import timber.log.Timber
+import java.nio.charset.StandardCharsets
 
 class MainViewModel(
-        private val connectionsClient: ConnectionsClient?,
-        private val packageName: String?
+    private val connectionsClient: ConnectionsClient?,
+    private val packageName: String?
 ) : ViewModel() {
 
     private val _stateLiveData = MutableLiveData<State>(State.RequiredPermissions)
-    val stateLiveData: LiveData<State> =_stateLiveData
-
     private val _opponentName = MutableLiveData<String>()
-    var opponentName: LiveData<String> = _opponentName
-
     private val _opponentEndpointId = MutableLiveData<String>()
-    var opponentEndpointId: LiveData<String> = _opponentEndpointId
+    private val _receivedMessages = MutableLiveData<List<String>>()
+    private val _sentMessages = MutableLiveData<List<String>>()
 
-    val name = generate()
+    val stateLiveData: LiveData<State> =_stateLiveData
+    var opponentName: LiveData<String> = _opponentName
+    var opponentEndpointId: LiveData<String> = _opponentEndpointId
+    var receivedMessages: LiveData<List<String>> = _receivedMessages
+    var sentMessages: LiveData<List<String>> = _sentMessages
+    val message = MutableLiveData<String>()
+    val name = Build.MODEL
 
     private val strategyCreator = Strategy.P2P_STAR
 
     fun setStatus(state: State) {
         _stateLiveData.value = state
+    }
+
+    fun send() {
+        val message = message.value ?: return
+        val opponentEndpointId = opponentEndpointId.value ?: return
+
+        val list = (sentMessages.value ?: emptyList()).toMutableList()
+        list.add(message)
+        _sentMessages.value = list
+        connectionsClient?.sendPayload(
+            opponentEndpointId, Payload.fromBytes(message.toByteArray(StandardCharsets.UTF_8))
+        )
     }
 
     fun findOpponents() {
@@ -55,8 +71,9 @@ class MainViewModel(
         val connectionsClient = connectionsClient ?: return
 
         connectionsClient.startDiscovery(
-                packageName, endpointDiscoveryCallback,
-                DiscoveryOptions.Builder().setStrategy(strategyCreator).build())
+            packageName, endpointDiscoveryCallback,
+            DiscoveryOptions.Builder().setStrategy(strategyCreator).build()
+        )
     }
 
     /** Broadcasts our presence using Nearby Connections so other players can find us.  */
@@ -65,26 +82,32 @@ class MainViewModel(
         val connectionsClient = connectionsClient ?: return
         // Note: Advertising may fail. To keep this demo simple, we don't handle failures.
         connectionsClient.startAdvertising(
-                name,
-                packageName,
-                connectionLifecycleCallback,
-                AdvertisingOptions
-                        .Builder()
-                        .setStrategy(strategyCreator)
-                        .build()
+            name,
+            packageName,
+            connectionLifecycleCallback,
+            AdvertisingOptions
+                .Builder()
+                .setStrategy(strategyCreator)
+                .build()
         )
     }
 
     // Callbacks for receiving payloads
     private val payloadCallback: PayloadCallback = object : PayloadCallback() {
+        var message: String = ""
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            //opponentChoice = MainActivity.GameChoice.valueOf(String(payload.asBytes()!!, StandardCharsets.UTF_8))
+            val bytes = payload.asBytes() ?: return
+            message = String(bytes, StandardCharsets.UTF_8)
+            Timber.d("Received: $endpointId: $message")
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
-//            if (update.status == PayloadTransferUpdate.Status.SUCCESS && myChoice != null && opponentChoice != null) {
-//                finishRound()
-//            }
+            if (update.status == PayloadTransferUpdate.Status.SUCCESS) {
+                val list = (receivedMessages.value ?: emptyList()).toMutableList()
+                list.add(message)
+                _receivedMessages.value = list
+            }
+            Timber.d("onPayloadTransferUpdate: ${update.status}")
         }
     }
 
@@ -130,8 +153,9 @@ class MainViewModel(
         }
     }
 
-    class Factory(private val connectionsClient: ConnectionsClient?,
-                  private val packageName: String?
+    class Factory(
+        private val connectionsClient: ConnectionsClient?,
+        private val packageName: String?
     ) : ViewModelProvider.NewInstanceFactory() {
 
         @Suppress("unchecked_cast")
