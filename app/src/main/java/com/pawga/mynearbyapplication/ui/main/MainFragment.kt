@@ -1,12 +1,14 @@
 package com.pawga.mynearbyapplication.ui.main
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
@@ -20,14 +22,15 @@ import com.pawga.mynearbyapplication.domain.State
 import com.pawga.mynearbyapplication.extensions.exhaustive
 import timber.log.Timber
 
+
 class MainFragment : Fragment(), MainView {
 
     private val REQUIRED_PERMISSIONS = arrayOf(
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.ACCESS_WIFI_STATE,
-            Manifest.permission.CHANGE_WIFI_STATE,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+        Manifest.permission.BLUETOOTH,
+        Manifest.permission.BLUETOOTH_ADMIN,
+        Manifest.permission.ACCESS_WIFI_STATE,
+        Manifest.permission.CHANGE_WIFI_STATE,
+        Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
     private val REQUEST_CODE_REQUIRED_PERMISSIONS = 1001
@@ -40,9 +43,10 @@ class MainFragment : Fragment(), MainView {
     private var packageName: String? = null
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?): View {
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
 
         activity?.also {
             connectionsClient = Nearby.getConnectionsClient(it)
@@ -50,8 +54,9 @@ class MainFragment : Fragment(), MainView {
         }
 
         viewModel = ViewModelProvider(
-                this,
-                MainViewModel.Factory(connectionsClient, packageName)).get(MainViewModel::class.java)
+            this,
+            MainViewModel.Factory(connectionsClient, packageName)
+        ).get(MainViewModel::class.java)
 
         viewModel.stateLiveData.observe(viewLifecycleOwner, {
             render(it)
@@ -65,7 +70,7 @@ class MainFragment : Fragment(), MainView {
     }
 
     override fun onRequestPermissionsResult(
-            requestCode: Int, permissions: Array<String?>, grantResults: IntArray
+        requestCode: Int, permissions: Array<String?>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != REQUEST_CODE_REQUIRED_PERMISSIONS) {
@@ -81,27 +86,45 @@ class MainFragment : Fragment(), MainView {
 
     override fun render(state: State) {
         when (state) {
-            is State.RequiredPermissions -> renderPermissionsState()
-            is State.Finding -> Timber.d("State.LoadingState")
-            is State.RequiredOpponent -> Timber.d("State.RequiredOpponent")
+            is State.RequiredPermissions -> {
+                renderPermissionsState()
+            }
+            is State.Finding -> {
+                Timber.d("State.Finding")
+                reset()
+            }
+            is State.RequiredOpponent -> {
+                Timber.d("State.RequiredOpponent")
+                reset()
+            }
             is State.NonPermissions -> {
                 Snackbar.make(
-                        requireView(),
-                        getString(R.string.error_missing_permissions),
-                        Snackbar.LENGTH_LONG)
-                        .setAction(getString(R.string.cancel), null).show()
+                    requireView(),
+                    getString(R.string.error_missing_permissions),
+                    Snackbar.LENGTH_LONG
+                )
+                    .setAction(getString(R.string.cancel), null).show()
             }
-            is State.Error -> Timber.d("State.ErrorState")
-            is State.Connected -> Timber.d("State.Ready")
+            is State.Error -> {
+                Timber.d("State.ErrorState")
+            }
+            is State.Connected -> {
+                Timber.d("State.Ready")
+            }
         }.exhaustive
+    }
+
+    private fun reset() {
+        val context = context ?: return
+        hideKeyboardFrom(context, binding.message)
     }
 
     private fun renderPermissionsState() {
         context?.also {
             if (!hasPermissions(it, *REQUIRED_PERMISSIONS)) {
                 requestPermissions(
-                        REQUIRED_PERMISSIONS,
-                        REQUEST_CODE_REQUIRED_PERMISSIONS
+                    REQUIRED_PERMISSIONS,
+                    REQUEST_CODE_REQUIRED_PERMISSIONS
                 )
             } else {
                 viewModel.setStatus(State.RequiredOpponent)
@@ -118,6 +141,12 @@ class MainFragment : Fragment(), MainView {
             }
         }
         return true
+    }
+
+    fun hideKeyboardFrom(context: Context, view: View) {
+        val imm: InputMethodManager =
+            context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     companion object {

@@ -37,11 +37,16 @@ class MainViewModel(
         _stateLiveData.value = State.Finding
     }
 
+    fun stopFinding() {
+        disconnect()
+    }
+
     fun disconnect() {
         val connectionsClient = connectionsClient ?: return
         connectionsClient.stopDiscovery()
         connectionsClient.stopAdvertising()
         _stateLiveData.value = State.RequiredOpponent
+        _opponentName.value = null
     }
 
     /** Starts looking for other players using Nearby Connections.  */

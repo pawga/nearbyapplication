@@ -6,5 +6,6 @@
     <string name="send">Send</string>
 
     <string name="action_find_opponents">Find opponent</string>
+    <string name="action_stop_find_opponents">Stop finding</string>
     <string name="action_disconnect">Disconnect</string>
 </resources>
