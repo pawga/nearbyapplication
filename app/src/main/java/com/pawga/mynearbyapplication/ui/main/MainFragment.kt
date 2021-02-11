@@ -11,6 +11,8 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.gms.nearby.Nearby
+import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.material.snackbar.Snackbar
 import com.pawga.mynearbyapplication.R
 import com.pawga.mynearbyapplication.databinding.MainFragmentBinding
@@ -21,11 +23,11 @@ import timber.log.Timber
 class MainFragment : Fragment(), MainView {
 
     private val REQUIRED_PERMISSIONS = arrayOf(
-        Manifest.permission.BLUETOOTH,
-        Manifest.permission.BLUETOOTH_ADMIN,
-        Manifest.permission.ACCESS_WIFI_STATE,
-        Manifest.permission.CHANGE_WIFI_STATE,
-        Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
     private val REQUEST_CODE_REQUIRED_PERMISSIONS = 1001
@@ -33,14 +35,23 @@ class MainFragment : Fragment(), MainView {
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: MainFragmentBinding
 
+    // Our handle to Nearby Connections
+    private var connectionsClient: ConnectionsClient? = null
+    private var packageName: String? = null
+
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?): View {
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?): View {
+
+        activity?.also {
+            connectionsClient = Nearby.getConnectionsClient(it)
+            packageName = it.packageName
+        }
 
         viewModel = ViewModelProvider(
                 this,
-                MainViewModel.Factory()).get(MainViewModel::class.java)
+                MainViewModel.Factory(connectionsClient, packageName)).get(MainViewModel::class.java)
 
         viewModel.stateLiveData.observe(viewLifecycleOwner, {
             render(it)
@@ -54,7 +65,7 @@ class MainFragment : Fragment(), MainView {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String?>, grantResults: IntArray
+            requestCode: Int, permissions: Array<String?>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != REQUEST_CODE_REQUIRED_PERMISSIONS) {
@@ -71,7 +82,7 @@ class MainFragment : Fragment(), MainView {
     override fun render(state: State) {
         when (state) {
             is State.RequiredPermissions -> renderPermissionsState()
-            is State.Loading -> Timber.d("State.LoadingState")
+            is State.Finding -> Timber.d("State.LoadingState")
             is State.RequiredOpponent -> Timber.d("State.RequiredOpponent")
             is State.NonPermissions -> {
                 Snackbar.make(
@@ -81,7 +92,7 @@ class MainFragment : Fragment(), MainView {
                         .setAction(getString(R.string.cancel), null).show()
             }
             is State.Error -> Timber.d("State.ErrorState")
-            is State.Ready -> Timber.d("State.Ready")
+            is State.Connected -> Timber.d("State.Ready")
         }.exhaustive
     }
 

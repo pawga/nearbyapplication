@@ -46,6 +46,9 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
 
+    //Nearby
+    implementation 'com.google.android.gms:play-services-nearby:17.0.0'
+
     //Timber
     def timberVersion = "4.7.1"
     implementation "com.jakewharton.timber:timber:$timberVersion"

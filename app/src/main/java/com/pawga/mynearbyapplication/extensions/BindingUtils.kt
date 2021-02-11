@@ -17,7 +17,7 @@ fun View.setNearbyEnable(status: State) {
 private fun isEnable(view: View, status: State): Boolean {
     return when (view.id) {
         R.id.find_opponents -> { status == State.RequiredOpponent }
-        R.id.disconnect, R.id.message, R.id.send -> { status == State.Ready }
+        R.id.disconnect, R.id.message, R.id.send -> { status == State.Connected }
         else -> true
     }
 }

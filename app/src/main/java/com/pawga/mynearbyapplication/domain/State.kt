@@ -5,8 +5,8 @@ package com.pawga.mynearbyapplication.domain
  */
 
 sealed class State {
-    object Ready : State()
-    object Loading : State()
+    object Connected : State()
+    object Finding : State()
     data class Error(val data: String) : State()
     object RequiredPermissions : State()
     object RequiredOpponent : State()
