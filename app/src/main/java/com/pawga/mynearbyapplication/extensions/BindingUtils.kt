@@ -22,9 +22,18 @@ fun View.setNearbyVisible(status: State) {
 
 private fun isEnable(view: View, status: State): Boolean {
     return when (view.id) {
-        R.id.find -> { status == State.RequiredOpponent }
-        R.id.stop_finding, R.id.progress_bar -> { status == State.Finding }
-        R.id.disconnect, R.id.message, R.id.send -> { status == State.Connected }
+        R.id.find -> {
+            status == State.RequiredOpponent
+        }
+        R.id.stop_finding, R.id.progress_bar -> {
+            status == State.Finding
+        }
+        R.id.disconnect, R.id.message, R.id.send -> {
+            when(status) {
+                is State.Connected, is State.SentData, is State.ReceivedData -> true
+                else -> false
+            }
+        }
         else -> true
     }
 }

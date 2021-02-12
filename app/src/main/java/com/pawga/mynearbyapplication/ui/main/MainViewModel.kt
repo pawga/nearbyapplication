@@ -73,7 +73,6 @@ class MainViewModel(
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
             if (result.status.isSuccess) {
-                Timber.i("onConnectionResult: connection successful")
                 val connectionsClient = connectionsClient ?: return
                 connectionsClient.stopDiscovery()
                 connectionsClient.stopAdvertising()
@@ -81,7 +80,7 @@ class MainViewModel(
                 _stateLiveData.value = State.Connected
             } else {
                 _stateLiveData.value = State.Error("onConnectionResult: connection failed")
-                Timber.i("onConnectionResult: connection failed")
+                disconnect()
             }
         }
 

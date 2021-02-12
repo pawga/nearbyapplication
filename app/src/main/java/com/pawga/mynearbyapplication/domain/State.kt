@@ -12,5 +12,5 @@ sealed class State {
     object NonPermissions : State()
     data class ReceivedData(val data: String) : State()
     data class SentData(val data: String) : State()
-    data class Error(val data: String) : State()
+    data class Error(val error: String) : State()
 }
