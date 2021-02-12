@@ -1,8 +1,6 @@
 # Network Communications Using Nearby
 
-Nearby Connections is a peer-to-peer networking API that allows apps to easily discover, connect to, and exchange data with nearby devices in real-time, regardless of network connectivity.
-
-The Nearby Connections API allows apps to easily discover, connect to, and exchange data with nearby devices in real-time, regardless of network connectivity. It uses Bluetooth, Wi-Fi, and other technologies, and is designed to hide the complexity of these technologies so your app can focus on discovering and interacting with nearby devices easily.
+Nearby Connections is a peer-to-peer networking API that allows apps to easily discover, connect to, and exchange data with nearby devices in real-time, regardless of network connectivity. It uses Bluetooth, Wi-Fi, and other technologies, and is designed to hide the complexity of these technologies so your app can focus on discovering and interacting with nearby devices easily.
 
 Some example use cases:
 * Collaborative whiteboard: 
