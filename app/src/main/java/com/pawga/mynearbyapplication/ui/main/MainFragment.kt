@@ -12,6 +12,8 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.nearby.Nearby
@@ -35,13 +37,14 @@ class MainFragment : Fragment(), MainView {
     )
 
     private val REQUEST_CODE_REQUIRED_PERMISSIONS = 1001
-
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: MainFragmentBinding
-
-    // Our handle to Nearby Connections
     private var connectionsClient: ConnectionsClient? = null
     private var packageName: String? = null
+    private val _receivedMessages = MutableLiveData<List<String>>()
+    private val _sentMessages = MutableLiveData<List<String>>()
+    var receivedMessages: LiveData<List<String>> = _receivedMessages
+    var sentMessages: LiveData<List<String>> = _sentMessages
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -67,11 +70,11 @@ class MainFragment : Fragment(), MainView {
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
-        binding.opponentMessages.adapter = ListAdapter(viewModel.receivedMessages)
-        binding.opponentMessages.layoutManager =
+        binding.receivedMessages.adapter = ListAdapter(receivedMessages)
+        binding.receivedMessages.layoutManager =
             LinearLayoutManager(binding.root.context, LinearLayoutManager.VERTICAL, false)
-        binding.ownerMessages.adapter = ListAdapter(viewModel.sentMessages)
-        binding.ownerMessages.layoutManager =
+        binding.sentMessages.adapter = ListAdapter(sentMessages)
+        binding.sentMessages.layoutManager =
             LinearLayoutManager(binding.root.context, LinearLayoutManager.VERTICAL, false)
 
         return binding.root
@@ -113,6 +116,16 @@ class MainFragment : Fragment(), MainView {
                 )
                     .setAction(getString(R.string.cancel), null).show()
             }
+            is State.SentData -> {
+                val list = (sentMessages.value ?: emptyList()).toMutableList()
+                list.add(state.data)
+                _sentMessages.value = list
+            }
+            is State.ReceivedData -> {
+                val list = (receivedMessages.value ?: emptyList()).toMutableList()
+                list.add(state.data)
+                _receivedMessages.value = list
+            }
             is State.Error -> {
                 Timber.d("State.ErrorState")
             }
@@ -125,6 +138,8 @@ class MainFragment : Fragment(), MainView {
     private fun reset() {
         val context = context ?: return
         hideKeyboardFrom(context, binding.message)
+        _receivedMessages.value = emptyList()
+        _sentMessages.value = emptyList()
     }
 
     private fun renderPermissionsState() {
